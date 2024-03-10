@@ -4,10 +4,16 @@ import time
 
 
 pygame.init()
+clock = pygame.time.Clock()
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("Sudoku Solver")
 font = pygame.font.Font('freesansbold.ttf', 32)
+game = 9
+FPS=20
+
+
+SOLVING_SPEED = 0.005
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -24,6 +30,21 @@ BLACK = (0, 0, 0)
 GREY = (128, 128, 128)
 WHITE = (255, 255, 255)
 TURQUOISE = (64, 224, 208)
+
+
+board = [
+    [3, 9, -1, -1, 5, -1, -1, -1, -1],
+    [-1, -1, -1, 2, -1, -1, -1, -1, 5],
+    [-1, -1, -1, 7, 1, 9, -1, 8, -1],
+    [-1, 5, -1, -1, 6, 8, -1, -1, -1],
+    [2, -1, 6, -1, -1, 3, -1, -1, -1],
+    [-1, -1, -1, -1, -1, -1, -1, -1, 4],
+    [5, -1, -1, -1, -1, -1, -1, -1, -1],
+    [6, 7, -1, 1, -1, 5, -1, 4, -1],
+    [1, -1, 9, -1, -1, -1, 2, -1, -1]
+]
+original_board = board
+
 
 
 class Node:
@@ -83,7 +104,25 @@ def render_numbers_on_board(win, width, rows):
     for row in range(len(board)):
         start_x = gap // 2  # Reset start_x for each row
         for col in range(len(board[row])):
-            text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, BLACK)
+            if original_board[row][col] == -1:
+                text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, BLACK)
+                textRect = text.get_rect()
+                textRect.center = (start_x, start_y)
+                win.blit(text, textRect)
+            start_x += gap
+        start_y += gap
+
+    pygame.display.update()
+
+
+def render_original_board(win,width,rows):
+    gap = width // rows
+    start_y = gap // 2
+
+    for row in range(len(original_board)):
+        start_x = gap // 2  # Reset start_x for each row
+        for col in range(len(original_board[row])):
+            text = font.render(str(original_board[row][col]) if original_board[row][col] != -1 else ' ', True, BLACK)
             textRect = text.get_rect()
             textRect.center = (start_x, start_y)
             win.blit(text, textRect)
@@ -91,21 +130,6 @@ def render_numbers_on_board(win, width, rows):
         start_y += gap
 
     pygame.display.update()
-
-
-# pp = pprint.PrettyPrinter()
-#
-board = [
-    [3, 9, -1, -1, 5, -1, -1, -1, -1],
-    [-1, -1, -1, 2, -1, -1, -1, -1, 5],
-    [-1, -1, -1, 7, 1, 9, -1, 8, -1],
-    [-1, 5, -1, -1, 6, 8, -1, -1, -1],
-    [2, -1, 6, -1, -1, 3, -1, -1, -1],
-    [-1, -1, -1, -1, -1, -1, -1, -1, 4],
-    [5, -1, -1, -1, -1, -1, -1, -1, -1],
-    [6, 7, -1, 1, -1, 5, -1, 4, -1],
-    [1, -1, 9, -1, -1, -1, 2, -1, -1]
-]
 
 
 def find_next_empty(puzzle):
@@ -149,22 +173,37 @@ def solve_sudoku(puzzle):
     return False
 
 
-#
+def solve_sudoku_generator(puzzle):
+    row, col = find_next_empty(puzzle)
+
+    if row is None:
+        yield puzzle
+        return
+
+    for guess in range(1, 10):
+        if is_valid(puzzle, guess, row, col):
+            puzzle[row][col] = guess
+            yield puzzle
+            yield from solve_sudoku_generator(puzzle)
+
+    puzzle[row][col] = -1
+
+
+
 def main(win, width):
     ROWS = 9
-    grid = make_grid(ROWS, width)
-    draw(win, grid, ROWS, width)
+    clock.tick(FPS)
     program_running = True
     animation_started = False
 
+    solving_generator = solve_sudoku_generator(board)
+
+
     while program_running:
+        grid = make_grid(ROWS, width)
+        draw(win, grid, ROWS, width)
+        render_original_board(win, width, ROWS)
 
-        if animation_started:
-            solve_sudoku(board)
-            time.sleep(2)
-
-
-        render_numbers_on_board(win, width, ROWS)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -173,12 +212,31 @@ def main(win, width):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and not animation_started:
                     animation_started = True
+                if event.key == pygame.K_ESCAPE and animation_started:
+                    animation_started = False
+                if event.key == pygame.K_RETURN:
+                    solve_sudoku(board)
+                    render_numbers_on_board(win,width,ROWS)
+                    animation_started = False
+
+
+
+        if animation_started:
+            try:
+                success = next(solving_generator)
+                render_numbers_on_board(win, width, ROWS)
+                time.sleep(SOLVING_SPEED)
+                pygame.display.update()
+
+                if not success:
+                    print("Solved")
+                    animation_started = False
+
+            except StopIteration as e:
+                print("Solved")
+                animation_started = False
 
     pygame.quit()
 
 
 main(WIN, WIDTH)
-
-# solve_sudoku(board)
-#
-# pp.pprint((board))
