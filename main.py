@@ -94,7 +94,6 @@ def draw(win, grid, rows, width):
         for node in row:
             node.draw(win)
     draw_grid(win, rows, width)
-    pygame.display.update()
 
 
 def render_numbers_on_board(win, width, rows,board):
@@ -117,7 +116,7 @@ def render_numbers_on_board(win, width, rows,board):
             start_x += gap
         start_y += gap
 
-    pygame.display.update()
+
 
 
 def render_original_board(win,width,rows):
@@ -204,7 +203,6 @@ def main(win, width):
     solving_generator = solve_sudoku_generator(board)
 
     while program_running:
-        # clock.tick(FPS)
         grid = make_grid(ROWS, width)
         draw(win, grid, ROWS, width)
         render_original_board(win, width, ROWS)
@@ -234,7 +232,6 @@ def main(win, width):
                 success = next(solving_generator)
                 render_numbers_on_board(win, width, ROWS,board)
                 time.sleep(SOLVING_SPEED)
-                pygame.display.update()
 
                 if not success:
                     print("Solved")
