@@ -6,11 +6,11 @@ import time
 pygame.init()
 clock = pygame.time.Clock()
 WIDTH = 800
-WIN = pygame.display.set_mode((WIDTH, WIDTH))
+WIN = pygame.display.set_mode((WIDTH, WIDTH),pygame.DOUBLEBUF)
 pygame.display.set_caption("Sudoku Solver")
 font = pygame.font.Font('freesansbold.ttf', 32)
 game = 9
-FPS=20
+
 
 
 SOLVING_SPEED = 0.005
@@ -97,7 +97,7 @@ def draw(win, grid, rows, width):
     pygame.display.update()
 
 
-def render_numbers_on_board(win, width, rows):
+def render_numbers_on_board(win, width, rows,board):
     gap = width // rows
     start_y = gap // 2
 
@@ -105,6 +105,11 @@ def render_numbers_on_board(win, width, rows):
         start_x = gap // 2  # Reset start_x for each row
         for col in range(len(board[row])):
             if original_board[row][col] == -1:
+                text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, GREY)
+                textRect = text.get_rect()
+                textRect.center = (start_x, start_y)
+                win.blit(text, textRect)
+            else:
                 text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, BLACK)
                 textRect = text.get_rect()
                 textRect.center = (start_x, start_y)
@@ -192,18 +197,17 @@ def solve_sudoku_generator(puzzle):
 
 def main(win, width):
     ROWS = 9
-    clock.tick(FPS)
+
     program_running = True
     animation_started = False
 
     solving_generator = solve_sudoku_generator(board)
 
-
     while program_running:
+        # clock.tick(FPS)
         grid = make_grid(ROWS, width)
         draw(win, grid, ROWS, width)
         render_original_board(win, width, ROWS)
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -215,16 +219,20 @@ def main(win, width):
                 if event.key == pygame.K_ESCAPE and animation_started:
                     animation_started = False
                 if event.key == pygame.K_RETURN:
-                    solve_sudoku(board)
-                    render_numbers_on_board(win,width,ROWS)
+                    for solution_board in solving_generator:
+                        completed_board = solution_board
                     animation_started = False
-
+                    solve_sudoku(original_board)
+                    print(original_board)
+                    render_numbers_on_board(win, width, ROWS,original_board)
+                    # render_numbers_on_board()
+                    print("Simulation completed")
 
 
         if animation_started:
             try:
                 success = next(solving_generator)
-                render_numbers_on_board(win, width, ROWS)
+                render_numbers_on_board(win, width, ROWS,board)
                 time.sleep(SOLVING_SPEED)
                 pygame.display.update()
 
@@ -237,6 +245,7 @@ def main(win, width):
                 animation_started = False
 
     pygame.quit()
+
 
 
 main(WIN, WIDTH)
