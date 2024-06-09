@@ -1,23 +1,36 @@
-# Sudoku Solver using Backtracking
-This Python script solves Sudoku puzzles using a backtracking algorithm. Given an incomplete Sudoku puzzle, the program fills in the missing values such that the completed puzzle adheres to the rules of Sudoku - each row, column, and 3x3 subgrid must contain all the digits from 1 to 9 without repetition.
+# Sudoku Sleuth
+This Python script solves Sudoku puzzles using a backtracking algorithm. T
+The program simulates the filling in of the missing puzzle pieces demonstrated using the pygame library.
 
-## How to Use
-Input the Sudoku Puzzle:
+![GIF](assets/2024-06-09%2014-52-11.gif)
 
-  1. **Modify the board variable in the script to represent your Sudoku puzzle. Use -1 to denote empty cells.
-  python
+## Features
+- Interactive Sudoku solver
+- Visualization of the solving process
+- User-friendly interface for inputting Sudoku puzzles
+- Basic game menu
+
+## Requirements
+- Python 3.x
+- Pygame
+## Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-username/sudoku-sleuth.git
+   ```
+2. Install Pygame:
+  ```sh
+  pip install pygame
   ```
-  board = [
-      [3, 9, -1, -1, 5, -1, -1, -1, -1],
-      [-1, -1, -1, 2, -1, -1, -1, -1, 5],
-      ... (complete the puzzle)
-  ]**
-```
-2. **Run the Script:**
-
-  Execute the script, and the solver will attempt to fill in the missing values.
-  python using backtracking
-
-3. **View the Result:**
-
-The solved puzzle will be printed using the pprint module.
+## Usage
+1. Navigate to the project directory:
+  ```sh
+  cd sudoku-sleuth
+  ```
+2. Run the script:
+  ```sh
+  python sudoku_solver.py
+  ```
+## How to Use
+ - Click on a cell to change its number before solving.
+ - Press SPACE to start simulation, ESC to pause, and RETURN to solve immediately.
