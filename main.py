@@ -1,7 +1,7 @@
 import pprint
 import pygame
 import time
-import numpy as np
+import copy
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -11,8 +11,7 @@ pygame.display.set_caption("Sudoku Solver")
 font = pygame.font.Font('freesansbold.ttf', 32)
 game = 9
 
-BORDER_BLINK_INTERVAL = 1000
-SOLVING_SPEED = 0.000005
+SOLVING_SPEED = 0.000000000000005
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -26,11 +25,10 @@ CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 AQUA = (100, 200, 200)
 BLACK = (0, 0, 0)
-GREY = (128, 128, 128)
+GREY = (100, 100, 100)
 WHITE = (255, 255, 255)
 TURQUOISE = (64, 224, 208)
 text_rects = []
-
 
 original_board = [
     [3, 9, -1, -1, 5, -1, -1, -1, -1],
@@ -43,8 +41,8 @@ original_board = [
     [6, 7, -1, 1, -1, 5, -1, 4, -1],
     [1, -1, 9, -1, -1, -1, 2, -1, -1]
 ]
-board = original_board
-immediately_solved_board= original_board.copy()
+board = copy.deepcopy(original_board)
+immediately_solved_board = copy.deepcopy(original_board)
 
 
 class Node:
@@ -58,7 +56,6 @@ class Node:
         self.total_rows = total_rows
         self.border_visible = False
         self.blink_timer = 0
-        self.blink_interval = BORDER_BLINK_INTERVAL
         self.clicked = False
 
     def draw(self, win):
@@ -67,25 +64,9 @@ class Node:
         else:
             pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
 
-    def blink_if_clicked(self, current_time):
-        if self.clicked:
-            print("Blinking")
-            # Get the current time
-            time_since_last_blink = current_time - self.blink_timer  # Calculate time since last blink
-            if time_since_last_blink >= self.blink_interval:
-                print("time for next blink")
-                self.border_visible = not self.border_visible
-                print(self.border_visible)
-                self.blink_timer = current_time
-
     def click(self):
         print(f"Node {self.row, self.col} clicked")
         self.clicked = True
-
-    def stop_blinking(self):
-        print("Stop blinking")
-        self.clicked = False
-        self.border_visible = False
 
 
 def get_node_clicked(grid):
@@ -129,25 +110,23 @@ def draw(win, grid, rows, width):
     draw_grid(win, rows, width)
 
 
-def render_numbers_on_board(win, width, rows, board):
+def render_numbers_on_board(win, width, rows, drawn_board):
     gap = width // rows
     start_y = gap // 2
 
-    for row in range(len(board)):
+    for row in range(len(drawn_board)):
         start_x = gap // 2  # Reset start_x for each row
-        for col in range(len(board[row])):
-            if original_board[row][col] == -1:
-                text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, GREY)
-                textRect = text.get_rect()
-                textRect.center = (start_x, start_y)
-                text_rects.append(textRect)
-                win.blit(text, textRect)
+        for col in range(len(drawn_board[row])):
+            if original_board[row][col] != -1:
+                text_color = BLACK
             else:
-                text = font.render(str(board[row][col]) if board[row][col] != -1 else ' ', True, BLACK)
-                textRect = text.get_rect()
-                textRect.center = (start_x, start_y)
-                text_rects.append(textRect)
-                win.blit(text, textRect)
+                text_color = GREY
+
+            text = font.render(str(drawn_board[row][col]) if drawn_board[row][col] != -1 else ' ', True, text_color)
+            textRect = text.get_rect()
+            textRect.center = (start_x, start_y)
+            text_rects.append(textRect)
+            win.blit(text, textRect)
             start_x += gap
         start_y += gap
 
@@ -165,8 +144,6 @@ def render_original_board(win, width, rows):
             win.blit(text, textRect)
             start_x += gap
         start_y += gap
-
-    pygame.display.update()
 
 
 def find_next_empty(puzzle):
@@ -226,24 +203,63 @@ def solve_sudoku_generator(puzzle):
     puzzle[row][col] = -1
 
 
+def display_menu(win, width):
+    win.fill(WHITE)
+    title_font = pygame.font.Font('freesansbold.ttf', 64)
+    instructions_font = pygame.font.Font('freesansbold.ttf', 24)
+
+    title = title_font.render("Sudoku Sleuth", True, BLACK)
+    start_button = title_font.render("Start", True, GREEN)
+    instructions = instructions_font.render("Click on a cell to change its number before solving.", True, BLACK)
+    instructions2 = instructions_font.render("Press SPACE to start solving, ESC to pause.", True, BLACK)
+
+    title_rect = title.get_rect(center=(width // 2, width // 4))
+    start_button_rect = start_button.get_rect(center=(width // 2, width // 2))
+    instructions_rect = instructions.get_rect(center=(width // 2, width // 2 + 100))
+    instructions2_rect = instructions2.get_rect(center=(width // 2, width // 2 + 150))
+
+    win.blit(title, title_rect)
+    win.blit(start_button, start_button_rect)
+    win.blit(instructions, instructions_rect)
+    win.blit(instructions2, instructions2_rect)
+    pygame.display.update()
+
+    return start_button_rect
+
+
 def main(win, width):
     ROWS = 9
-
     program_running = True
     animation_started = False
+    animation_finished = False
     clicked_node = None
     solving_generator = solve_sudoku_generator(board)
 
     while program_running:
-        grid = make_grid(ROWS, width)
-        draw(win, grid, ROWS, width)
-        render_original_board(win, width, ROWS)
+        start_button_rect = display_menu(win, width)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 program_running = False
+                pygame.quit()
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_button_rect.collidepoint(event.pos):
+                    program_running = False
+
+        clock.tick(60)
+
+    while True:
+        grid = make_grid(ROWS, width)
+        draw(win, grid, ROWS, width)
+        render_original_board(win, width, ROWS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                print("mousedown")
                 if pygame.mouse.get_pressed()[0] and not animation_started:
                     for row in grid:
                         for node in row:
@@ -253,12 +269,10 @@ def main(win, width):
                                 clicked_node = node
 
             if event.type == pygame.KEYDOWN:
-                print("keydown")
                 if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
                     if clicked_node:
                         row, col = get_node_clicked(grid)
                         original_board[col][row] = int(event.unicode)
-                        clicked_node.stop_blinking()
                         clicked_node = None
 
                 if event.key == pygame.K_SPACE and not animation_started:  # START BUTTON
@@ -269,26 +283,24 @@ def main(win, width):
 
                 if event.key == pygame.K_RETURN:
                     solve_sudoku(immediately_solved_board)
-                    print(immediately_solved_board)
-                    animation_started = False
                     render_numbers_on_board(win, width, ROWS, immediately_solved_board)
-
-        current_time = pygame.time.get_ticks()
-        for row in grid:
-            for node in row:
-                node.blink_if_clicked(current_time)
+                    animation_finished = True
 
         if animation_started:
             try:
                 success = next(solving_generator)
-                render_numbers_on_board(win, width, ROWS, board)
+                render_numbers_on_board(win, width, ROWS, success)
                 time.sleep(SOLVING_SPEED)
 
-            except StopIteration as e:
-                print("No more steps")
-                animation_started = False
+            except StopIteration:
+                animation_finished = True
+                print("no more steps")
+
+        if animation_finished:
+            animation_started = False
+            render_numbers_on_board(win, width, ROWS, immediately_solved_board)
+
         pygame.display.update()
-    pygame.quit()
 
 
 main(WIN, WIDTH)
