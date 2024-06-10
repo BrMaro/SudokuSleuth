@@ -1,6 +1,7 @@
 # Sudoku Sleuth
-This Python script solves Sudoku puzzles using a backtracking algorithm. T
+This Python script simulates the solving of Sudoku puzzles. 
 The program simulates the filling in of the missing puzzle pieces demonstrated using the pygame library.
+It uses the Backtracking algorithm to solve the puzzle
 
 ![GIF](assets/2024-06-09%2014-52-11.gif)
 
@@ -13,24 +14,27 @@ The program simulates the filling in of the missing puzzle pieces demonstrated u
 ## Requirements
 - Python 3.x
 - Pygame
+  
 ## Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/your-username/sudoku-sleuth.git
+   git clone https://github.com/BrMaro/SudokuSleuth
    ```
 2. Install Pygame:
-  ```sh
-  pip install pygame
-  ```
+     ```sh
+     pip install pygame
+     ```
+     
 ## Usage
 1. Navigate to the project directory:
-  ```sh
-  cd sudoku-sleuth
-  ```
+     ```sh
+     cd sudoku-sleuth
+     ```
 2. Run the script:
-  ```sh
-  python sudoku_solver.py
-  ```
+     ```sh
+     python sudoku_solver.py
+     ```
+     
 ## How to Use
  - Click on a cell to change its number before solving.
  - Press SPACE to start simulation, ESC to pause, and RETURN to solve immediately.
